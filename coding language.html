@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Interactive Function Playground — Styled</title>
+  <!-- Google font (optional) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1724; /* navy-ish */
+      --card:#0b1220;
+      --muted:#9aa6bf;
+      --accent1:#7c3aed; /* violet */
+      --accent2:#06b6d4; /* teal */
+      --glass: rgba(255,255,255,0.04);
+      --glass-2: rgba(255,255,255,0.02);
+      --radius:14px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,58,237,0.12), transparent),
+                  radial-gradient(900px 400px at 90% 90%, rgba(6,182,212,0.06), transparent),
+                  var(--bg);
+      color:#e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:28px;
+    }
+
+    .app{
+      max-width:1200px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:24px;
+      align-items:start;
+    }
+
+    header{
+      grid-column:1/-1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:8px;
+    }
+    .title{
+      display:flex;flex-direction:column;
+    }
+    h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-0.2px}
+    p.lead{margin:2px 0 0;font-size:13px;color:var(--muted)}
+
+    .card{
+      background: linear-gradient(180deg,var(--glass), var(--glass-2));
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow: 0 6px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    /* Editor column */
+    .editor{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    label{font-size:12px;color:var(--muted);}
+
+    textarea#te{
+      width:100%;
+      min-height:300px;
+      resize:vertical;
+      padding:14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      color:inherit;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size:13px;
+      line-height:1.5;
+      outline:none;
+      box-shadow: 0 4px 20px rgba(2,6,23,0.5) inset;
+    }
+
+    .controls{
+      display:flex;gap:10px;align-items:center;
+    }
+    .btn{
+      appearance:none;
+      -webkit-appearance:none;
+      border:0;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+      background: linear-gradient(90deg,var(--accent1), var(--accent2));
+      color:white;
+      box-shadow: 0 8px 30px rgba(6,8,23,0.6);
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn:active{transform:translateY(1px)}
+
+    .secondary{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.06);
+      color:var(--muted);
+      box-shadow:none;
+    }
+
+    /* Preview / output column */
+    .output{
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .screen{
+      min-height:200px;
+      max-height:520px;
+      overflow:auto;
+      padding:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+
+    /* Generated buttons styling */
+    .screen input[type=button]{
+      display:inline-block;
+      margin:6px 8px 6px 0;
+      padding:9px 14px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05));
+      color:inherit;
+      font-weight:600;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.5);
+      cursor:pointer;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .screen input[type=button]:hover{transform:translateY(-3px);box-shadow: 0 12px 28px rgba(2,6,23,0.65)}
+
+    .console{
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+      font-size:12px;
+      color:var(--muted);
+      background:transparent;
+      padding:12px;border-radius:10px;border:1px dashed rgba(255,255,255,0.03);
+      max-height:160px;overflow:auto
+    }
+
+    footer{grid-column:1/-1;color:var(--muted);font-size:12px;margin-top:6px}
+
+    /* responsive */
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr;}
+      header{gap:6px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title">
+        <h1>Interactive Function Playground</h1>
+        <p class="lead">Type lines like <code>button(Click me, open(https://example.com))</code> or <code>search(hello world)</code> — then press Play.</p>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:var(--muted)">Made prettier with CSS ✨</div>
+      </div>
+    </header>
+
+    <section class="editor card">
+      <label for="te">Scripted input</label>
+      <textarea id="te">
+</textarea>
+
+      <div class="controls">
+        <button class="btn" onclick="handle_input()">Play</button>
+        <button class="btn secondary" onclick="clearOutput()">Clear Output</button>
+        <button class="btn secondary" onclick="clearConsole()">Clear Console</button>
+      </div>
+
+      <div class="card" style="margin-top:8px;">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Quick reference</div>
+      </div>
+    </section>
+
+    <aside class="output">
+      <div>
+        <label>Output screen</label>
+        <div id="screen" class="screen card"></div>
+      </div>
+
+      <div>
+        <label>Console</label>
+        <pre id="console" class="console card"></pre>
+      </div>
+    </aside>
+
+    <footer>Tip: you can edit the JavaScript inside the page to add more commands. This stylesheet keeps the UI modern and accessible.</footer>
+  </div>
+
+  <script>
+    let FP_LISTS = {};
+    // Improved and encapsulated functions. They still follow the original behaviour but
+    // append elements to the #screen container and log to the #console area instead of the real console.
+
+    function logToConsole() {
+      const consoleEl = document.getElementById('console')
+      const args = Array.from(arguments).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a))
+      consoleEl.textContent += args.join(' ') + '\n'
+      consoleEl.scrollTop = consoleEl.scrollHeight
+    }
+
+    function handle_arguments(argument_string) {
+      if (!argument_string) return []
+      const args = argument_string.trim().split(/\s*,\s*/)
+      return args
+    }
+
+    function ensureScreen(){
+      return document.getElementById('screen')
+    }
+
+  function handle_function(function_string) {
+  if (!function_string || function_string.trim() === '') return;
+
+  // ensure global stores exist (safe to call repeatedly)
+  if (!window.FP_LISTS) window.FP_LISTS = {};
+  if (!window.FP_FEATURES) window.FP_FEATURES = {};
+  if (!window.FP_SIMPLE_GAME) window.FP_SIMPLE_GAME = { enemyHp: 50, maxHp: 50, running: false, player: { hp: 100, maxHp: 100, minD: 4, maxD: 12 }, enemy: { name: "Goblin", hp: 30, maxHp: 30, minD: 3, maxD: 8 }, score: 0, timer: null };
+
+  const bracket_start_index = function_string.indexOf("(");
+  const bracket_end_index = function_string.lastIndexOf(")");
+
+  // RAW TEXT: no parentheses -> print raw text
+  if (bracket_start_index === -1 || bracket_end_index === -1) {
+    const text = function_string.trim();
+    const node = document.createElement('div');
+    node.textContent = text;
+    ensureScreen().appendChild(node);
+    logToConsole('raw:', text);
+    return;
+  }
+
+  const function_length = bracket_start_index;
+  const inside_length = bracket_end_index - bracket_start_index - 1;
+
+  const function_name = function_string.substr(0, function_length).trim();
+  const text_inside_bracket = function_string.substr(bracket_start_index + 1, inside_length);
+  const function_args = handle_arguments(text_inside_bracket);
+
+  logToConsole('fn:', function_name, 'args:', function_args);
+
+  const screen = ensureScreen();
+
+  // ---------------------------
+  // CORE/WEB
+  // ---------------------------
+  if (function_name === "open") {
+    window.open(text_inside_bracket, '_blank');
+  } else if (function_name === "search") {
+    const q = encodeURIComponent(text_inside_bracket);
+    window.open('https://www.google.com/search?q=' + q, '_blank');
+  }
+
+  // ---------------------------
+  // BASIC TEXT & LAYOUT
+  // ---------------------------
+  else if (function_name === "text") {
+    const el = document.createElement("div");
+    el.textContent = text_inside_bracket;
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "title") {
+    const el = document.createElement("h2");
+    el.textContent = text_inside_bracket;
+    el.style.marginTop = "12px";
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "subtitle") {
+    const el = document.createElement("h3");
+    el.textContent = text_inside_bracket;
+    el.style.opacity = "0.9";
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "bold") {
+    const el = document.createElement("strong");
+    el.textContent = text_inside_bracket;
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "italic") {
+    const el = document.createElement("em");
+    el.textContent = text_inside_bracket;
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "code") {
+    const pre = document.createElement("pre");
+    pre.textContent = text_inside_bracket;
+    pre.style.fontSize = "12px";
+    screen.appendChild(pre);
+  }
+
+  else if (function_name === "hr") {
+    screen.appendChild(document.createElement("hr"));
+  }
+
+  else if (function_name === "newline") {
+    let total = 1;
+    if (function_args.length > 0) {
+      const parsed = parseInt(function_args[0]);
+      if (!isNaN(parsed) && parsed > 0) total = parsed;
+    }
+    for (let i = 0; i < total; i++) screen.appendChild(document.createElement('br'));
+  }
+
+  // ---------------------------
+  // BUTTONS / INPUT / FORM
+  // ---------------------------
+  else if (function_name === "button") {
+    const newbutton = document.createElement('input');
+    newbutton.type = 'button';
+
+    let button_text = text_inside_bracket;
+    if (function_args.length > 1) {
+      button_text = function_args[0];
+      const function_string_inner = function_args.slice(1).join(',');
+      newbutton.addEventListener('click', function () {
+        handle_function(function_string_inner);
+      });
+    }
+    newbutton.value = button_text;
+    screen.appendChild(newbutton);
+  }
+
+  else if (function_name === "input") {
+    const label = function_args[0] || "";
+    const command = function_args[1] || "";
+
+    const wrap = document.createElement("div");
+    wrap.style.display = "flex";
+    wrap.style.gap = "8px";
+    wrap.style.alignItems = "center";
+
+    const field = document.createElement("input");
+    field.type = "text";
+    field.placeholder = label;
+    field.style.padding = "8px";
+    field.style.borderRadius = "8px";
+    field.style.background = "rgba(255,255,255,0.05)";
+    field.style.border = "1px solid rgba(255,255,255,0.1)";
+    field.style.color = "white";
+
+    const btn = document.createElement("input");
+    btn.type = "button";
+    btn.value = "Add";
+    btn.onclick = () => {
+      handle_function(command.replace("()", `(${field.value})`));
+      field.value = "";
+    };
+
+    wrap.appendChild(field);
+    wrap.appendChild(btn);
+    screen.appendChild(wrap);
+  }
+
+  // ---------------------------
+  // LISTS (dynamic)
+  // ---------------------------
+  else if (function_name === "list") {
+    const listName = function_args[0];
+    if (!listName) {
+      logToConsole("list() requires a name");
+      return;
+    }
+
+    if (!FP_LISTS[listName]) FP_LISTS[listName] = [];
+
+    // Remove previously rendered list with same id so multiple lists don't accumulate
+    const prev = document.getElementById("list_" + listName);
+    if (prev) prev.remove();
+
+    const ul = document.createElement("ul");
+    ul.id = "list_" + listName;
+    ul.style.paddingLeft = "20px";
+    ul.style.maxHeight = "160px";
+    ul.style.overflow = "auto";
+
+    FP_LISTS[listName].forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      ul.appendChild(li);
+    });
+
+    screen.appendChild(ul);
+  }
+
+  // ---------------------------
+  // TODO helpers
+  // ---------------------------
+  else if (function_name === "addTask") {
+    const taskText = function_args[0] || "";
+    if (!FP_LISTS["tasks"]) FP_LISTS["tasks"] = [];
+    FP_LISTS["tasks"].push(taskText);
+
+    // refresh list display
+    const existing = document.getElementById("list_tasks");
+    if (existing) existing.remove();
+    handle_function("list(tasks)");
+  }
+  // ================================
+// POKÉMON GENERATOR
+// ================================
+else if (function_name === "summonPokemon") {
+
+  // simple Pokémon data
+  const pokemonList = [
+    { name: "Pikachu", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" },
+    { name: "Charmander", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png" },
+    { name: "Squirtle", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png" },
+    { name: "Bulbasaur", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png" },
+    { name: "Gengar", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png" },
+    { name: "Snorlax", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png" },
+    { name: "Mew", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/151.png" },
+    { name: "Eevee", img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png" },
+  ];
+
+  // pick random
+  const chosen = pokemonList[Math.floor(Math.random() * pokemonList.length)];
+
+  // store in global tokens
+  window.POKEMON_NAME = chosen.name;
+  window.POKEMON_IMG = chosen.img;
+
+  // update all matching text tokens
+  document.querySelectorAll("*").forEach(node => {
+    if (node.textContent === "pokemon_name") {
+      node.textContent = chosen.name;
+    }
+  });
+
+  // update all matching image tokens
+  document.querySelectorAll("img").forEach(img => {
+    if (img.src.endsWith("pokemon_img")) {
+      img.src = chosen.img;
+    }
+  });
+
+  // initialize list if needed
+  if (!FP_LISTS["pokemon_log"]) FP_LISTS["pokemon_log"] = [];
+
+  // log result
+  FP_LISTS["pokemon_log"].push("Summoned " + chosen.name);
+
+  // refresh list
+  const existing = document.getElementById("list_pokemon_log");
+  if (existing) existing.remove();
+  handle_function("list(pokemon_log)");
+}
+else if (function_name === "count") {
+  const listName = function_args[0];
+
+  if (!FP_LISTS[listName]) FP_LISTS[listName] = [];
+
+  const el = document.createElement("div");
+  el.textContent = FP_LISTS[listName].length;
+  screen.appendChild(el);
+}
+
+
+  // ---------------------------
+  // VISUAL ELEMENTS
+  // ---------------------------
+  else if (function_name === "img") {
+    const img = document.createElement("img");
+    img.src = function_args[0] || "";
+    img.style.maxWidth = "100%";
+    img.style.borderRadius = "10px";
+    screen.appendChild(img);
+  }
+
+  else if (function_name === "color") {
+    const el = document.createElement("div");
+    el.textContent = function_args[1] || function_args[0] || "";
+    if (function_args[0]) el.style.color = function_args[0];
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "box") {
+    const box = document.createElement("div");
+    box.style.width = function_args[0] || "100px";
+    box.style.height = function_args[1] || "100px";
+    box.style.background = function_args[2] || "rgba(255,255,255,0.1)";
+    box.style.borderRadius = "10px";
+    screen.appendChild(box);
+  }
+
+  else if (function_name === "card") {
+    const card = document.createElement("div");
+    card.style.padding = "14px";
+    card.style.border = "1px solid rgba(255,255,255,0.08)";
+    card.style.borderRadius = "12px";
+    card.style.background = "rgba(255,255,255,0.04)";
+    card.innerHTML = `<strong>${function_args[0] || ""}</strong><br>${function_args[1] || ""}`;
+    screen.appendChild(card);
+  }
+
+  // ---------------------------
+  // LAYOUT: row / col
+  // ---------------------------
+  else if (function_name === "row") {
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.gap = "10px";
+    row.style.alignItems = "center";
+    screen.appendChild(row);
+
+    // evaluate children as independent commands
+    text_inside_bracket.split(/\s*,\s*/).forEach(fn => handle_function(fn));
+  }
+
+  else if (function_name === "col") {
+    const col = document.createElement("div");
+    col.style.display = "flex";
+    col.style.flexDirection = "column";
+    col.style.gap = "6px";
+    screen.appendChild(col);
+
+    text_inside_bracket.split(/\s*,\s*/).forEach(fn => handle_function(fn));
+  }
+
+  // ---------------------------
+  // INTERACTIVE / SMALL WIDGETS
+  // ---------------------------
+  else if (function_name === "toggle") {
+    const wrapper = document.createElement("div");
+    const btn = document.createElement("button");
+    btn.textContent = "Toggle";
+    btn.className = "btn secondary";
+
+    const content = document.createElement("div");
+    content.textContent = function_args[0] || "";
+    content.style.marginTop = "6px";
+
+    btn.onclick = () => {
+      content.style.display = content.style.display === "none" ? "block" : "none";
+    };
+
+    wrapper.appendChild(btn);
+    wrapper.appendChild(content);
+    screen.appendChild(wrapper);
+  }
+
+  else if (function_name === "counter") {
+    let value = 0;
+    const wrap = document.createElement("div");
+    const display = document.createElement("span");
+    display.textContent = value;
+
+    const plus = document.createElement("button");
+    plus.textContent = "+";
+    plus.className = "btn secondary";
+    plus.onclick = () => { value++; display.textContent = value; };
+
+    const minus = document.createElement("button");
+    minus.textContent = "-";
+    minus.className = "btn secondary";
+    minus.onclick = () => { value--; display.textContent = value; };
+
+    wrap.append(display, plus, minus);
+    wrap.style.display = "flex";
+    wrap.style.gap = "10px";
+    wrap.style.alignItems = "center";
+    screen.appendChild(wrap);
+  }
+
+  else if (function_name === "timer") {
+    const interval = parseInt(function_args[0]) || 1000;
+    const command = function_args.slice(1).join(",");
+    setInterval(() => { handle_function(command); }, interval);
+  }
+
+  else if (function_name === "notify") {
+    alert(text_inside_bracket);
+  }
+
+  else if (function_name === "spinner") {
+    const spin = document.createElement("div");
+    spin.textContent = "⏳ Loading...";
+    spin.style.opacity = "0.8";
+    screen.appendChild(spin);
+  }
+
+  // ---------------------------
+  // FUN
+  // ---------------------------
+  else if (function_name === "rainbow") {
+    const el = document.createElement("div");
+    const txt = text_inside_bracket || "";
+    el.innerHTML = [...txt].map((c, i) => `<span style="color:hsl(${i * 20},80%,70%)">${c}</span>`).join("");
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "emoji") {
+    const pool = "😀 😁 😂 🤣 😊 😎 😍 🤯 🙃 😅".split(" ");
+    const el = document.createElement("div");
+    el.textContent = pool[Math.floor(Math.random() * pool.length)];
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "shake") {
+    const el = document.createElement("div");
+    el.textContent = text_inside_bracket;
+    el.style.display = "inline-block";
+    el.style.animation = "shake .4s infinite";
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "typewriter") {
+    const el = document.createElement("div");
+    screen.appendChild(el);
+    const txt = text_inside_bracket || "";
+    let i = 0;
+    const int = setInterval(() => {
+      el.textContent += txt[i++] || "";
+      if (i >= txt.length) clearInterval(int);
+    }, 40);
+  }
+
+  else if (function_name === "matrix") {
+    const pre = document.createElement("pre");
+    pre.textContent = Array(20).fill(0).map(() => Math.random() > 0.5 ? "1" : "0").join("");
+    screen.appendChild(pre);
+  }
+
+  // ---------------------------
+  // UTILITIES
+  // ---------------------------
+  else if (function_name === "log") {
+    logToConsole(text_inside_bracket);
+  }
+
+  else if (function_name === "timestamp") {
+    const el = document.createElement("div");
+    el.textContent = Date.now();
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "random") {
+    const min = parseFloat(function_args[0]) || 0;
+    const max = parseFloat(function_args[1]) || 1;
+    const out = Math.floor(Math.random() * (max - min + 1)) + min;
+    const el = document.createElement("div");
+    el.textContent = out;
+    screen.appendChild(el);
+  }
+
+  else if (function_name === "repeat") {
+    const times = parseInt(function_args[0]) || 1;
+    const command = function_args.slice(1).join(",");
+    for (let i = 0; i < times; i++) handle_function(command);
+  }
+
+  // ---------------------------
+  // SYSTEM / BROWSER
+  // ---------------------------
+  else if (function_name === "copy") {
+    navigator.clipboard.writeText(text_inside_bracket || "");
+  }
+
+  else if (function_name === "paste") {
+    navigator.clipboard.readText().then(t => {
+      const el = document.createElement("div");
+      el.textContent = t;
+      screen.appendChild(el);
+    });
+  }
+
+  else if (function_name === "vibrate") {
+    if (navigator.vibrate) navigator.vibrate(parseInt(function_args[0]) || 200);
+  }
+
+  else if (function_name === "theme") {
+    if (function_args[0] === "dark") document.body.style.background = "#0f1724";
+    if (function_args[0] === "light") document.body.style.background = "#f4f4f4";
+  }
+
+  else if (function_name === "fullscreen") {
+    if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+  }
+
+  // ---------------------------
+  // FEATURE FLAG: enable(feature)
+  // ---------------------------
+  else if (function_name === "enable") {
+    const feat = function_args[0];
+    if (feat) {
+      FP_FEATURES[feat] = true;
+      logToConsole("Feature enabled:", feat);
+    }
+  }
+
+  else if (function_name === "disable") {
+    const feat = function_args[0];
+    if (feat) {
+      FP_FEATURES[feat] = false;
+      logToConsole("Feature disabled:", feat);
+    }
+  }
+
+  // ---------------------------
+  // GAME (GATED) : startGame, attack, resetGame, spawn, heal, addScore
+  // Must call enable(game) first to use these.
+  // ---------------------------
+  else if (function_name === "startGame") {
+    if (!FP_FEATURES.game) {
+      logToConsole("Game feature is disabled. Call enable(game) first.");
+      return;
+    }
+    FP_SIMPLE_GAME.running = true;
+    FP_SIMPLE_GAME.player.hp = FP_SIMPLE_GAME.player.maxHp;
+    FP_SIMPLE_GAME.enemy.hp = FP_SIMPLE_GAME.enemy.maxHp;
+    FP_SIMPLE_GAME.score = 0;
+    FP_LISTS["game_log"] = FP_LISTS["game_log"] || [];
+    FP_LISTS["game_log"].push("Game started! Enemy HP reset to " + FP_SIMPLE_GAME.enemy.hp);
+
+    // refresh list
+    const old = document.getElementById("list_game_log");
+    if (old) old.remove();
+    handle_function("list(game_log)");
+
+    // start auto-attack timer (if not already running)
+    if (FP_SIMPLE_GAME.timer) clearInterval(FP_SIMPLE_GAME.timer);
+    FP_SIMPLE_GAME.timer = setInterval(() => {
+      if (!FP_SIMPLE_GAME.running) return;
+      const e = FP_SIMPLE_GAME.enemy;
+      const dmg = Math.floor(Math.random() * (e.maxD - e.minD + 1)) + e.minD;
+      FP_SIMPLE_GAME.player.hp = Math.max(0, FP_SIMPLE_GAME.player.hp - dmg);
+      FP_LISTS["game_log"].push(`Enemy hits you for ${dmg} dmg`);
+      const existing = document.getElementById("list_game_log");
+      if (existing) {
+        const li = document.createElement("li");
+        li.textContent = FP_LISTS["game_log"].slice(-1)[0];
+        existing.appendChild(li);
+        existing.scrollTop = existing.scrollHeight;
+      }
+      // update any visible enemy/player hp tokens
+      document.querySelectorAll("*").forEach(n => {
+        if (n.textContent == "enemy_hp") n.textContent = FP_SIMPLE_GAME.enemy.hp;
+        if (n.textContent == "player_hp") n.textContent = FP_SIMPLE_GAME.player.hp;
+      });
+      if (FP_SIMPLE_GAME.player.hp <= 0) {
+        FP_LISTS["game_log"].push("You were defeated!");
+        FP_SIMPLE_GAME.running = false;
+        clearInterval(FP_SIMPLE_GAME.timer);
+        FP_SIMPLE_GAME.timer = null;
+      }
+    }, 2000);
+  }
+
+  else if (function_name === "attack") {
+  if (!FP_FEATURES.game) {
+    logToConsole("Game feature is disabled. Call enable(game) first.");
+    return;
+  }
+  if (!FP_SIMPLE_GAME.running) {
+    logToConsole("No running game. Call startGame()");
+    return;
+  }
+
+  const min = FP_SIMPLE_GAME.player.minD || 4;
+  const max = FP_SIMPLE_GAME.player.maxD || 12;
+  const dmg = Math.floor(Math.random() * (max - min + 1)) + min;
+
+  FP_SIMPLE_GAME.enemy.hp = Math.max(0, FP_SIMPLE_GAME.enemy.hp - dmg);
+  FP_LISTS["game_log"].push(`You hit ${FP_SIMPLE_GAME.enemy.name} for ${dmg} dmg`);
+
+  // Update visible hp tokens
+  document.querySelectorAll("*").forEach(n => {
+    if (n.textContent == "enemy_hp") n.textContent = FP_SIMPLE_GAME.enemy.hp;
+    if (n.textContent == "player_hp") n.textContent = FP_SIMPLE_GAME.player.hp;
+  });
+
+  // Refresh log
+  const existing = document.getElementById("list_game_log");
+  if (existing) existing.remove();
+  handle_function("list(game_log)");
+
+  // ===== GAME END WHEN ENEMY DIES =====
+  if (FP_SIMPLE_GAME.enemy.hp <= 0) {
+    FP_LISTS["game_log"].push("Enemy defeated! Game Over!");
+
+    // Stop the game
+    FP_SIMPLE_GAME.running = false;
+
+    // Stop enemy auto-attacks
+    if (FP_SIMPLE_GAME.timer) clearInterval(FP_SIMPLE_GAME.timer);
+    FP_SIMPLE_GAME.timer = null;
+
+    // Final log update
+    const ex = document.getElementById("list_game_log");
+    if (ex) ex.remove();
+    handle_function("list(game_log)");
+
+    return; // game stops here
+  }
+}
+
+
+  else if (function_name === "resetGame") {
+    if (!FP_FEATURES.game) {
+      logToConsole("Game feature is disabled. Call enable(game) first.");
+      return;
+    }
+    FP_SIMPLE_GAME.enemy.hp = FP_SIMPLE_GAME.enemy.maxHp;
+    FP_SIMPLE_GAME.player.hp = FP_SIMPLE_GAME.player.maxHp;
+    FP_SIMPLE_GAME.score = 0;
+    FP_LISTS["game_log"] = [];
+    const lg = document.getElementById("list_game_log"); if (lg) lg.remove();
+    handle_function("list(game_log)");
+  }
+
+  else if (function_name === "spawn") {
+    if (!FP_FEATURES.game) {
+      logToConsole("Game feature is disabled. Call enable(game) first.");
+      return;
+    }
+    const name = function_args[0] || FP_SIMPLE_GAME.enemy.name;
+    const maxHp = parseInt(function_args[1]) || FP_SIMPLE_GAME.enemy.maxHp || 30;
+    const minD = parseInt(function_args[2]) || FP_SIMPLE_GAME.enemy.minD || 3;
+    const maxD = parseInt(function_args[3]) || FP_SIMPLE_GAME.enemy.maxD || 8;
+    FP_SIMPLE_GAME.enemy = { name, hp: maxHp, maxHp, minD, maxD };
+    FP_LISTS["game_log"].push(`Spawned ${name} (${maxHp} HP)`);
+    const old = document.getElementById("list_game_log"); if (old) old.remove();
+    handle_function("list(game_log)");
+    // update visible tokens
+    document.querySelectorAll("*").forEach(n => {
+      if (n.textContent == "enemy_hp") n.textContent = FP_SIMPLE_GAME.enemy.hp;
+    });
+  }
+
+  else if (function_name === "heal") {
+    if (!FP_FEATURES.game) {
+      logToConsole("Game feature is disabled. Call enable(game) first.");
+      return;
+    }
+    const healAmount = parseInt(function_args[0]) || 15;
+    FP_SIMPLE_GAME.player.hp = Math.min(FP_SIMPLE_GAME.player.maxHp, FP_SIMPLE_GAME.player.hp + healAmount);
+    FP_LISTS["game_log"].push(`You healed ${healAmount} HP`);
+    const old = document.getElementById("list_game_log"); if (old) old.remove();
+    handle_function("list(game_log)");
+    document.querySelectorAll("*").forEach(n => { if (n.textContent == "player_hp") n.textContent = FP_SIMPLE_GAME.player.hp; });
+  }
+
+  else if (function_name === "addScore") {
+    if (!FP_FEATURES.game) {
+      logToConsole("Game feature is disabled. Call enable(game) first.");
+      return;
+    }
+    const val = parseInt(function_args[0]) || 0;
+    FP_SIMPLE_GAME.score = (FP_SIMPLE_GAME.score || 0) + val;
+    FP_LISTS["game_log"].push(`Score +${val}`);
+    const old = document.getElementById("list_game_log"); if (old) old.remove();
+    handle_function("list(game_log)");
+  }
+
+  // ---------------------------
+  // FALLBACK: unknown command
+  // ---------------------------
+  else {
+    const el = document.createElement('div');
+    el.textContent = `[unrecognized command] ${function_string}`;
+    el.style.opacity = 0.9;
+    screen.appendChild(el);
+    logToConsole('unrecognized function:', function_string);
+  }
+}
+
+
+    function handle_input() {
+      const multi_line_input = document.getElementById('te').value
+      const multi_lines = multi_line_input.split('\n')
+      for (const line of multi_lines) {
+        handle_function(line)
+      }
+    }
+
+    function clearOutput(){
+      document.getElementById('screen').innerHTML = ''
+    }
+    function clearConsole(){
+      document.getElementById('console').textContent = ''
+    }
+document.addEventListener("keydown", (e) => {
+  // Mac: Command + J
+  // Windows/Linux: Ctrl + J
+  if ((e.metaKey && e.key === "j") || (e.ctrlKey && e.key === "j")) {
+    e.preventDefault(); // stops browser shortcuts
+    handle_input();     // runs Play
+  }
+});
+
+
+    // small initialization for demo
+    (function(){
+      logToConsole('ready — edit the textarea and press Play')
+    })()
+  </script>
+</body>
+</html>
